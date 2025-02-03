@@ -102,12 +102,12 @@ class TeacherResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ImportAction::make()
+                ->label('Profesores en .csv')
+                    ->importer(TeacherImporter::class)
             ]);
-            // ->headerActions([
-            //     ImportAction::make()
-            //     ->label('Profesores en .csv')
-            //         ->importer(TeacherImporter::class)
-            // ]);
     }
 
     public static function getRelations(): array
