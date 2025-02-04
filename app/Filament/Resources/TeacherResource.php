@@ -30,10 +30,10 @@ class TeacherResource extends Resource
     {
         return [
             CreateAction::make('Create Teacher')
-            ->label('Nuevo Profesor'),
+                ->label('Nuevo Profesor'),
             CreateAction::make()
-            ->label('Subir Profesores en .csv')
-            ->importer(TeacherImporter::class),
+                ->label('Subir Profesores en .csv')
+                ->importer(TeacherImporter::class),
         ];
     }
 
@@ -44,6 +44,9 @@ class TeacherResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->label('Name')
                     ->required()
+                    ->maxLength(255),
+                    Forms\Components\TextInput::make('alias')
+                    ->label('Alias')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
@@ -60,10 +63,10 @@ class TeacherResource extends Resource
                             ->required()
                             ->maxLength(255),
                     ]),
-                    Forms\Components\TextInput::make('password')
+                Forms\Components\TextInput::make('password')
                     ->label('Password')
                     ->password()
-                    ->default(fn () => Hash::make('password'))
+                    ->default(fn() => Hash::make('password'))
                     ->hiddenOn('edit')
                     ->dehydrateStateUsing(fn($state) => Hash::make($state))
                     ->dehydrated(fn($state) => filled($state)),
@@ -87,9 +90,11 @@ class TeacherResource extends Resource
                     ->label('Email')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('alias')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('department.name')
                     ->label('Department')
-                    ->sortable()
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -105,7 +110,7 @@ class TeacherResource extends Resource
             ])
             ->headerActions([
                 ImportAction::make()
-                ->label('Profesores en .csv')
+                    ->label('Profesores en .csv')
                     ->importer(TeacherImporter::class)
             ]);
     }

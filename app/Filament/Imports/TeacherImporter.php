@@ -24,7 +24,7 @@ class TeacherImporter extends Importer
             ImportColumn::make('email')
                 ->label('Correo')
                 ->requiredMapping()
-                ->rules(['required', 'email', 'max:255','unique:teachers,email']),
+                ->rules(['required', 'email', 'max:255', 'unique:teachers,email']),
             ImportColumn::make('password')
                 ->label('Contraseña')
                 ->requiredMapping()
@@ -34,6 +34,9 @@ class TeacherImporter extends Importer
                 ->requiredMapping()
                 ->numeric()
                 ->rules(['required', 'integer']),
+            ImportColumn::make('alias')
+                ->requiredMapping()
+                ->rules(['max:255']),
         ];
     }
 
@@ -47,6 +50,7 @@ class TeacherImporter extends Importer
         return Teacher::firstOrNew([
             // Update existing records, matching them by `$this->data['column_name']`
             'name' => $this->data['name'],
+            'alias' => $this->data['alias']?? null,
             'email' => $this->data['email'],
             'password' => Hash::make($this->data['password']),
             'department_id' => $this->data['department_id'],

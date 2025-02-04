@@ -58,7 +58,6 @@ class AdministradoresPanelProvider extends PanelProvider
             ->plugin(
                 FilamentFullCalendarPlugin::make()
                 ->selectable()
-                ->editable(false)
                 ->timezone('local')
                 ->locale('es')
             );

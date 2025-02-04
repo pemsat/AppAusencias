@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('absences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
-            $table->date('date');
-            $table->integer('hour');
+            $table->datetime('starts_at');
+            $table->datetime('ends_at');
             $table->text('comment')->nullable();
             $table->timestamps();
         });
