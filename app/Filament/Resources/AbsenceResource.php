@@ -100,9 +100,6 @@ class AbsenceResource extends Resource
         ];
     }
 
-    /**
-     * Get available hour options based on the selected date.
-     */
     public static function getHourOptions($date)
     {
         if (!$date) return [];
@@ -189,6 +186,17 @@ class AbsenceResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    public static function getNavigation(): ?array
+    {
+         if (auth()->user()->hasRole('teacher')) {
+            return null;
+        }
+         return [
+            'label' => 'Users',
+            'icon' => 'heroicon-o-users',
+        ];
     }
 
     public static function getPages(): array

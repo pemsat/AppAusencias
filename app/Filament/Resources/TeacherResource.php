@@ -45,7 +45,7 @@ class TeacherResource extends Resource
                     ->label('Name')
                     ->required()
                     ->maxLength(255),
-                    Forms\Components\TextInput::make('alias')
+                Forms\Components\TextInput::make('alias')
                     ->label('Alias')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
@@ -76,6 +76,18 @@ class TeacherResource extends Resource
                     ->default(true)
                     ->hiddenOn('edit'),
             ]);
+    }
+
+
+    public static function getNavigation(): ?array
+    {
+         if (auth()->user()->hasRole('teacher')) {
+            return null;
+        }
+         return [
+            'label' => 'Users',
+            'icon' => 'heroicon-o-users',
+        ];
     }
 
     public static function table(Table $table): Table
