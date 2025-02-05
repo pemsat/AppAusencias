@@ -28,7 +28,6 @@ class AdministradoresPanelProvider extends PanelProvider
             ->default()
             ->id('administradores')
             ->path('administradores')
-            ->login()
             ->registration(TeacherRegister::class)
             ->colors([
                 'primary' => Color::Amber,

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\TeacherResource\Pages;
 use App\Filament\Resources\TeacherResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListTeachers extends ListRecords
 {
@@ -16,4 +17,5 @@ class ListTeachers extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
 }

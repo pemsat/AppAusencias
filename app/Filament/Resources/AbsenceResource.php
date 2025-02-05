@@ -139,9 +139,7 @@ class AbsenceResource extends Resource
         ];
     }
 
-    /**
-     * Convert hour selection into actual start and end datetime.
-     */
+
     public static function getHourTimeRange($hour, $date)
     {
         $times = [
@@ -186,17 +184,6 @@ class AbsenceResource extends Resource
     public static function getRelations(): array
     {
         return [];
-    }
-
-    public static function getNavigation(): ?array
-    {
-         if (auth()->user()->hasRole('teacher')) {
-            return null;
-        }
-         return [
-            'label' => 'Users',
-            'icon' => 'heroicon-o-users',
-        ];
     }
 
     public static function getPages(): array

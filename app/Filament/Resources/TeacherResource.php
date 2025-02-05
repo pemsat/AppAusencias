@@ -31,7 +31,7 @@ class TeacherResource extends Resource
         return [
             CreateAction::make('Create Teacher')
                 ->label('Nuevo Profesor'),
-            CreateAction::make()
+            ImportAction::make()
                 ->label('Subir Profesores en .csv')
                 ->importer(TeacherImporter::class),
         ];
@@ -78,17 +78,6 @@ class TeacherResource extends Resource
             ]);
     }
 
-
-    public static function getNavigation(): ?array
-    {
-         if (auth()->user()->hasRole('teacher')) {
-            return null;
-        }
-         return [
-            'label' => 'Users',
-            'icon' => 'heroicon-o-users',
-        ];
-    }
 
     public static function table(Table $table): Table
     {

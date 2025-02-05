@@ -13,6 +13,7 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 
 class CalendarWidget extends FullCalendarWidget
 {
@@ -21,6 +22,11 @@ class CalendarWidget extends FullCalendarWidget
     public function getFormSchema(): array
     {
         return [
+            Select::make('teacher_id')
+                ->label('Profesor')
+                ->relationship('teacher', 'name')
+                ->required(),
+
             TextInput::make('comment')
                 ->label('Motivo')
                 ->required(),
@@ -28,12 +34,13 @@ class CalendarWidget extends FullCalendarWidget
             DatePicker::make('starts_at')
                 ->label('Fecha de ausencia')
                 ->required()
-                ->native(false)
-                ->reactive(),
+                ->reactive()
+                ->live()
+                ->readOnly(fn(Get $get) => !empty($get('starts_at'))),
 
             Select::make('ends_at')
                 ->label('Hora de ausencia')
-                ->options(fn ($get) => $this->getHourSlotFromTime(null, $get('starts_at')) ?? [])
+                ->options(fn(Get $get) => $this->getHourSlotFromTime(null, $get('starts_at')) ?? [])
                 ->required()
                 ->reactive(),
         ];
@@ -49,39 +56,67 @@ class CalendarWidget extends FullCalendarWidget
                 'right' => 'prev,next today',
             ],
             'selectable' => true,
-            'hiddenDays' => [0, 6], // Hide Sunday & Saturday
+            'hiddenDays' => [0, 6],
         ];
     }
 
     protected function headerActions(): array
     {
+        // return [
+        //     Actions\CreateAction::make()
+        //         ->mountUsing(
+        //             fn(Form $form, array $arguments) =>
+        //             $form->fill([
+        //                 'teacher_id' => null,
+        //                 'starts_at' => $arguments['starts_at'] ?? null, // Ensure starts_at is always set
+        //                 'ends_at' => $arguments['ends_at'],
+        //             ])
+        //         ),
+        // ];
         return [
             Actions\CreateAction::make()
                 ->mountUsing(
                     fn(Form $form, array $arguments) =>
                     $form->fill([
-                        'starts_at' => $arguments['start'] ?? null,
-                        'ends_at' => $arguments['end'] ?? null,
+                        'teacher_id' => null,
+                        'starts_at' => $arguments['starts_at'] ?? now()->toDateString(), // Pre-fill with selected date
+                        'ends_at' => null,
                     ])
-                ),
+                )
+                ->action(function (array $data) {
+
+                    $startsAt = Carbon::parse($data['starts_at'] . ' ' . $data['ends_at']);
+
+                    Absence::create([
+                        'teacher_id' => $data['teacher_id'],
+                        'starts_at' => $startsAt,
+                        'ends_at' => $startsAt->copy()->addMinutes(55),
+                        'comment' => $data['comment'],
+                    ]);
+
+                    $this->refreshRecords();
+                }),
         ];
     }
+
 
     public function fetchEvents(array $fetchInfo): array
     {
         return Absence::query()
             ->whereBetween('starts_at', [$fetchInfo['start'], $fetchInfo['end']])
+            ->with('teacher')
             ->get()
             ->map(
                 fn(Absence $absence) => EventData::make()
-                    ->id($absence->id) // Changed from UUID to ID
+                    ->id($absence->id)
                     ->title($absence->teacher->name . ' - ' . Carbon::parse($absence->starts_at)->format('H:i') . ' - ' . $absence->comment)
                     ->start($absence->starts_at->toIso8601String())
                     ->end($absence->ends_at->toIso8601String())
-                    ->url(
-                        url: AbsenceResource::getUrl(name: 'view', parameters: ['record' => $absence]),
-                        shouldOpenUrlInNewTab: true
-                    )
+                    ->extendedProps([
+                        'teacherName' => $absence->teacher->name,
+                        'hour' => Carbon::parse($absence->starts_at)->format('H:i') . ' - ' . Carbon::parse($absence->ends_at)->format('H:i'),
+                        'reason' => $absence->comment,
+                    ])
             )->toArray();
     }
 
@@ -91,7 +126,7 @@ class CalendarWidget extends FullCalendarWidget
         $hour = $this->getHourSlotFromTime($date);
         $absenceId = Absence::whereDate('starts_at', $date)
             ->whereTime('starts_at', '>=', $hour)
-            ->value('id'); // Directly get ID instead of fetching model
+            ->value('id');
 
         $this->dispatchBrowserEvent('open-modal', [
             'absenceId' => $absenceId,
@@ -102,15 +137,11 @@ class CalendarWidget extends FullCalendarWidget
 
     public function onDateSelect(string $start, ?string $end, bool $allDay, ?array $view, ?array $resource): void
     {
-        $startDate = Carbon::parse($start);
-        $endDate = Carbon::parse($end);
-        $hour = $this->getHourSlotFromTime($startDate->format('H:i'));
+
+        $selectedDate = Carbon::parse($start)->toDateString();
 
         $this->mountAction('create', [
-            'type' => 'select',
-            'starts_at' => $startDate->toDateTimeString(),
-            'ends_at' => $endDate->toDateTimeString(),
-            'hour' => $hour,
+            'starts_at' => $selectedDate,
         ]);
     }
 
@@ -121,12 +152,14 @@ class CalendarWidget extends FullCalendarWidget
                 '08:00' => '08:00 - 08:55',
                 '08:55' => '08:55 - 09:50',
                 '09:50' => '09:50 - 10:45',
+                '10:45' => '10:45 - 11:15',
                 '11:15' => '11:15 - 12:10',
                 '12:10' => '12:10 - 13:05',
                 '13:05' => '13:05 - 14:00',
                 '14:00' => '14:00 - 14:55',
                 '14:55' => '14:55 - 15:50',
                 '15:50' => '15:50 - 16:45',
+                '16:45' => '16:45 - 17:15',
                 '17:15' => '17:15 - 18:10',
                 '18:10' => '18:10 - 19:05',
                 '19:05' => '19:05 - 20:00',
@@ -135,25 +168,28 @@ class CalendarWidget extends FullCalendarWidget
                 '08:00' => '08:00 - 08:55',
                 '08:55' => '08:55 - 09:50',
                 '09:50' => '09:50 - 10:45',
+                '10:45' => '10:45 - 11:15',
                 '11:15' => '11:15 - 12:10',
                 '12:10' => '12:10 - 13:05',
                 '13:05' => '13:05 - 14:00',
                 '15:00' => '15:00 - 15:45',
                 '15:45' => '15:45 - 16:30',
                 '16:30' => '16:30 - 17:15',
-                '17:15' => '17:15 - 17:45',
+                '17:15' => '15:15 - 17:45',
                 '17:45' => '17:45 - 18:30',
                 '18:30' => '18:30 - 19:15',
                 '19:15' => '19:15 - 20:00',
             ]
         ];
 
-       if ($date) {
+        // If getting options for Select field
+        if ($date) {
             $isTuesday = Carbon::parse($date)->isTuesday();
             return $hourMap[$isTuesday ? 'tuesday' : 'normal'];
         }
 
-       if ($time) {
+        // If looking for a specific hour slot
+        if ($time) {
             foreach (array_merge($hourMap['normal'], $hourMap['tuesday']) as $start => $range) {
                 [$startHour, $endHour] = explode(' - ', $range);
                 if ($time >= $startHour && $time <= $endHour) {
@@ -181,7 +217,7 @@ class CalendarWidget extends FullCalendarWidget
             el.setAttribute("x-data", "{ tooltip: '" + tooltipContent + "' }");
 
             el.addEventListener('click', () => {
-                Livewire.emit('editAbsence', event.id);
+                Livewire.emit('editAbsence', event.id, event.hour);
             });
         }
         JS;
