@@ -13,10 +13,10 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Models\Teacher;
 use Carbon\Carbon;
 use Filament\Actions\ImportAction;
 use App\Filament\Widgets\CalendarWidget;
+use App\Models\User;
 
 class AbsenceResource extends Resource
 {
@@ -28,9 +28,9 @@ class AbsenceResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('teacher_id')
-                    ->label('Teacher')
-                    ->relationship('teacher', 'name')
+                Select::make('user')
+                    ->label('Profesor')
+                    ->relationship('user', 'name')
                     ->required(),
 
                 DatePicker::make('date')
@@ -62,7 +62,7 @@ class AbsenceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('teacher.name')
+                Tables\Columns\TextColumn::make('user.name')
                     ->label('Profesor')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('starts_at')
@@ -77,9 +77,9 @@ class AbsenceResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('teacher_id')
+                SelectFilter::make('user_id')
                     ->label('Filtrar por profesor')
-                    ->options(Teacher::all()->pluck('name', 'id'))
+                    ->options(User::all()->pluck('name', 'id'))
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

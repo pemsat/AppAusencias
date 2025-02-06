@@ -3,7 +3,7 @@
 namespace App\Filament\Imports;
 
 use App\Models\Department;
-use App\Models\Teacher;
+use App\Models\User;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class TeacherImporter extends Importer
 {
-    protected static ?string $model = Teacher::class;
+    protected static ?string $model = User::class;
 
     public static function getColumns(): array
     {
@@ -24,7 +24,7 @@ class TeacherImporter extends Importer
             ImportColumn::make('email')
                 ->label('Correo')
                 ->requiredMapping()
-                ->rules(['required', 'email', 'max:255', 'unique:teachers,email']),
+                ->rules(['required', 'email', 'max:255', 'unique:users,email']),
             ImportColumn::make('password')
                 ->label('Contraseña')
                 ->requiredMapping()
@@ -40,14 +40,14 @@ class TeacherImporter extends Importer
         ];
     }
 
-    public function resolveRecord(): ?Teacher
+    public function resolveRecord(): ?User
     {
         if (!Department::find($this->data['department_id'])) {
             Log::error('Department ID not found: ' . $this->data['department_id']);
             return null;
         }
 
-        return Teacher::firstOrNew([
+        return User::firstOrNew([
             // Update existing records, matching them by `$this->data['column_name']`
             'name' => $this->data['name'],
             'alias' => $this->data['alias']?? null,

@@ -12,7 +12,7 @@ class LoginResponse extends BaseLoginResponse
     public function toResponse($request): RedirectResponse|Redirector
     {
         if (auth()->user()->is_admin) {
-            return redirect()->to(Dashboard::getUrl(panel: 'admin'));
+            return redirect()->to(Dashboard::getUrl(panel: 'administradores'));
         }
 
         return parent::toResponse($request);

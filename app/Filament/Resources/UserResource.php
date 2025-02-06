@@ -3,57 +3,54 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Imports\TeacherImporter;
-use App\Filament\Resources\TeacherResource\Pages;
-use App\Filament\Resources\TeacherResource\RelationManagers;
-use App\Models\Teacher;
+use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\User;
+use Filament\Actions\CreateAction;
+use App\Filament\Imports\ProductImporter;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Hash;
-use Filament\Tables\Actions\ImportAction;
-use App\Filament\Imports\ProductImporter;
-use Filament\Actions\CreateAction;
 
-class TeacherResource extends Resource
+class UserResource extends Resource
 {
-    protected static ?string $model = Teacher::class;
+    protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $title = 'Profesores';
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            CreateAction::make('Create Teacher')
-                ->label('Nuevo Profesor'),
-            ImportAction::make()
-                ->label('Subir Profesores en .csv')
-                ->importer(TeacherImporter::class),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         CreateAction::make('Create User')
+    //             ->label('Nuevo Profesor'),
+    //         ImportAction::make()
+    //             ->label('Subir Profesores en .csv')
+    //             ->importer(TeacherImporter::class),
+    //     ];
+    // }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->label('Name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('alias')
+                    Forms\Components\TextInput::make('alias')
                     ->label('Alias')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
-                    ->label('Email')
                     ->email()
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('department_id')
+                    Forms\Components\Select::make('department_id')
                     ->label('Department')
                     ->relationship('department', 'name')
                     ->required()
@@ -64,38 +61,35 @@ class TeacherResource extends Resource
                             ->maxLength(255),
                     ]),
                 Forms\Components\TextInput::make('password')
-                    ->label('Password')
-                    ->password()
-                    ->default(fn() => Hash::make('password'))
-                    ->hiddenOn('edit')
-                    ->dehydrateStateUsing(fn($state) => Hash::make($state))
-                    ->dehydrated(fn($state) => filled($state)),
-
-                Forms\Components\Toggle::make('default_password')
-                    ->label('Default Password')
-                    ->default(true)
-                    ->hiddenOn('edit'),
+                ->label('Password')
+                ->password()
+                ->revealable()
+                ->default('password')
+                ->hiddenOn('edit')
+                ->dehydrateStateUsing(fn($state) => bcrypt($state))
+                ->dehydrated(fn($state) => filled($state)),
             ]);
     }
-
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Name')
-                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
-                    ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('alias')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('department.name')
-                    ->label('Department')
-                    ->sortable(),
+                    Tables\Columns\TextColumn::make('department.name')
+                    ->label('departamento')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -126,9 +120,14 @@ class TeacherResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTeachers::route('/'),
-            'create' => Pages\CreateTeacher::route('/create'),
-            'edit' => Pages\EditTeacher::route('/{record}/edit'),
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return auth()->user()->is_admin;
     }
 }

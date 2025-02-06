@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 //Route::view('/', 'welcome');
-Route::redirect('/', '/administradores')
+Route::redirect('/', '/user/login')
 ->name('AppAusencias');
 
 Route::view('dashboard', 'dashboard')

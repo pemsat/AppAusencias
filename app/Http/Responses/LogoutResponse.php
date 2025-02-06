@@ -4,7 +4,7 @@ namespace App\Http\Responses;
 
 use Filament\Pages\Dashboard;
 use Illuminate\Http\RedirectResponse;
-use Filament\Http\Responses\Auth\LoginResponse as BaseLogoutResponse;
+use Filament\Http\Responses\Auth\LogoutResponse as BaseLogoutResponse;
 use Filament\Facades\Filament;
 
 class LogoutResponse extends BaseLogoutResponse

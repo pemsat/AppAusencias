@@ -22,9 +22,9 @@ class CalendarWidget extends FullCalendarWidget
     public function getFormSchema(): array
     {
         return [
-            Select::make('teacher_id')
+            Select::make('user_id')
                 ->label('Profesor')
-                ->relationship('teacher', 'name')
+                ->relationship('user', 'name')
                 ->required(),
 
             TextInput::make('comment')
@@ -62,23 +62,12 @@ class CalendarWidget extends FullCalendarWidget
 
     protected function headerActions(): array
     {
-        // return [
-        //     Actions\CreateAction::make()
-        //         ->mountUsing(
-        //             fn(Form $form, array $arguments) =>
-        //             $form->fill([
-        //                 'teacher_id' => null,
-        //                 'starts_at' => $arguments['starts_at'] ?? null, // Ensure starts_at is always set
-        //                 'ends_at' => $arguments['ends_at'],
-        //             ])
-        //         ),
-        // ];
         return [
             Actions\CreateAction::make()
                 ->mountUsing(
                     fn(Form $form, array $arguments) =>
                     $form->fill([
-                        'teacher_id' => null,
+                        'user_id' => null,
                         'starts_at' => $arguments['starts_at'] ?? now()->toDateString(), // Pre-fill with selected date
                         'ends_at' => null,
                     ])
@@ -88,7 +77,7 @@ class CalendarWidget extends FullCalendarWidget
                     $startsAt = Carbon::parse($data['starts_at'] . ' ' . $data['ends_at']);
 
                     Absence::create([
-                        'teacher_id' => $data['teacher_id'],
+                        'user_id' => $data['user_id'],
                         'starts_at' => $startsAt,
                         'ends_at' => $startsAt->copy()->addMinutes(55),
                         'comment' => $data['comment'],
@@ -104,16 +93,16 @@ class CalendarWidget extends FullCalendarWidget
     {
         return Absence::query()
             ->whereBetween('starts_at', [$fetchInfo['start'], $fetchInfo['end']])
-            ->with('teacher')
+            ->with('user')
             ->get()
             ->map(
                 fn(Absence $absence) => EventData::make()
                     ->id($absence->id)
-                    ->title($absence->teacher->name . ' - ' . Carbon::parse($absence->starts_at)->format('H:i') . ' - ' . $absence->comment)
+                    ->title($absence->user->name . ' - ' . Carbon::parse($absence->starts_at)->format('H:i') . ' - ' . $absence->comment)
                     ->start($absence->starts_at->toIso8601String())
                     ->end($absence->ends_at->toIso8601String())
                     ->extendedProps([
-                        'teacherName' => $absence->teacher->name,
+                        'userName' => $absence->user->name,
                         'hour' => Carbon::parse($absence->starts_at)->format('H:i') . ' - ' . Carbon::parse($absence->ends_at)->format('H:i'),
                         'reason' => $absence->comment,
                     ])
@@ -212,7 +201,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return <<<JS
         function({ event, el }) {
-            const tooltipContent = 'Teacher: ' + event.extendedProps.teacherName + '<br>Hour: ' + event.extendedProps.hour + '<br>Reason: ' + event.extendedProps.reason;
+            const tooltipContent = 'Profesor: ' + event.extendedProps.userName + 'Hora: ' + event.extendedProps.hour + 'Motivo: ' + event.extendedProps.reason;
             el.setAttribute("x-tooltip", "tooltip");
             el.setAttribute("x-data", "{ tooltip: '" + tooltipContent + "' }");
 

@@ -24,9 +24,9 @@ class Absence extends Model
         'ends_at' => 'datetime',
     ];
 
-    public function teacher(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(User::class);
     }
 
 
