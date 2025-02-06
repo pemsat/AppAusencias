@@ -5,12 +5,14 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\AbsenceResource;
 use App\Models\Absence;
 use Carbon\Carbon;
+use Filament\Forms\Components\Builder;
 use Filament\Forms\Form;
 use Saade\FilamentFullCalendar\Actions;
 use Illuminate\Database\Eloquent\Model;
 use Saade\FilamentFullCalendar\Data\EventData;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
@@ -24,9 +26,11 @@ class CalendarWidget extends FullCalendarWidget
         return [
             Select::make('user_id')
                 ->label('Profesor')
-                ->relationship('user', 'name')
+                ->relationship('user','name')
                 ->required(),
-
+                //->default(auth()->id())
+                //->disabled(fn() => !auth()->user()->is_admin),
+            Hidden::make('token'),
             TextInput::make('comment')
                 ->label('Motivo')
                 ->required(),
@@ -66,12 +70,14 @@ class CalendarWidget extends FullCalendarWidget
             Actions\CreateAction::make()
                 ->mountUsing(
                     fn(Form $form, array $arguments) =>
+
                     $form->fill([
-                        'user_id' => null,
+                        'user_id' => auth()->user()->id,
                         'starts_at' => $arguments['starts_at'] ?? now()->toDateString(), // Pre-fill with selected date
                         'ends_at' => null,
                     ])
                 )
+
                 ->action(function (array $data) {
 
                     $startsAt = Carbon::parse($data['starts_at'] . ' ' . $data['ends_at']);

@@ -19,6 +19,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Http\Middleware\RedirectToProperPanelMiddleware;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -39,7 +40,8 @@ class UserPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/User/Widgets'), for: 'App\\Filament\\User\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            //->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\User\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 //Widgets\FilamentInfoWidget::class,
@@ -58,6 +60,12 @@ class UserPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectToProperPanelMiddleware::class,
                 Authenticate::class,
-            ]);
+            ])
+            ->plugin(
+                FilamentFullCalendarPlugin::make()
+                ->selectable()
+                ->timezone('local')
+                ->locale('es')
+            );;
     }
 }

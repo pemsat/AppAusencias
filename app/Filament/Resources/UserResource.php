@@ -25,17 +25,6 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
 
-    // protected function getHeaderActions(): array
-    // {
-    //     return [
-    //         CreateAction::make('Create User')
-    //             ->label('Nuevo Profesor'),
-    //         ImportAction::make()
-    //             ->label('Subir Profesores en .csv')
-    //             ->importer(TeacherImporter::class),
-    //     ];
-    // }
-
     public static function form(Form $form): Form
     {
         return $form
@@ -126,8 +115,4 @@ class UserResource extends Resource
         ];
     }
 
-    public static function canView(Model $record): bool
-    {
-        return auth()->user()->is_admin;
-    }
 }
