@@ -23,31 +23,53 @@ class CalendarWidget extends FullCalendarWidget
 
     public function getFormSchema(): array
     {
-        return [
-            Select::make('user_id')
-                ->label('Profesor')
-                ->relationship('user','name')
-                ->required(),
-                //->default(auth()->id())
-                //->disabled(fn() => !auth()->user()->is_admin),
-            Hidden::make('token'),
-            TextInput::make('comment')
-                ->label('Motivo')
-                ->required(),
+        if (auth()->user()->is_admin) {
+            return [
+                Select::make('user_id')
+                    ->label('Profesor')
+                    ->relationship('user', 'name')
+                    ->required(),
 
-            DatePicker::make('starts_at')
-                ->label('Fecha de ausencia')
-                ->required()
-                ->reactive()
-                ->live()
-                ->readOnly(fn(Get $get) => !empty($get('starts_at'))),
+                TextInput::make('comment')
+                    ->label('Motivo')
+                    ->required(),
 
-            Select::make('ends_at')
-                ->label('Hora de ausencia')
-                ->options(fn(Get $get) => $this->getHourSlotFromTime(null, $get('starts_at')) ?? [])
-                ->required()
-                ->reactive(),
-        ];
+                DatePicker::make('starts_at')
+                    ->label('Fecha de ausencia')
+                    ->required()
+                    ->reactive()
+                    ->live()
+                    ->readOnly(fn(Get $get) => !empty($get('starts_at'))),
+
+                Select::make('ends_at')
+                    ->label('Hora de ausencia')
+                    ->options(fn(Get $get) => $this->getHourSlotFromTime(null, $get('starts_at')) ?? [])
+                    ->required()
+                    ->reactive(),
+            ];
+        } else {
+            return [
+                Hidden::make('user_id')
+                    ->default(fn(Get $get) => $get(auth()->user()->id)),
+
+                TextInput::make('comment')
+                    ->label('Motivo')
+                    ->required(),
+
+                DatePicker::make('starts_at')
+                    ->label('Fecha de ausencia')
+                    ->required()
+                    ->reactive()
+                    ->live()
+                    ->readOnly(fn(Get $get) => !empty($get('starts_at'))),
+
+                Select::make('ends_at')
+                    ->label('Hora de ausencia')
+                    ->options(fn(Get $get) => $this->getHourSlotFromTime(null, $get('starts_at')) ?? [])
+                    ->required()
+                    ->reactive(),
+            ];
+        }
     }
 
     public function config(): array
@@ -63,6 +85,41 @@ class CalendarWidget extends FullCalendarWidget
             'hiddenDays' => [0, 6],
         ];
     }
+
+    // protected function headerActions(): array
+    // {
+    //     return [
+    //         Actions\CreateAction::make()
+    //             ->mountUsing(
+    //                 fn(Form $form, array $arguments) =>
+    //                 $form->fill([
+    //                     'user_id' => auth()->id(), // Set default value for user_id
+    //                     'starts_at' => $arguments['start'] ?? now()->toDateString(),
+    //                     'ends_at' => null,
+    //                 ])
+    //             )
+    //             ->action(function (array $data) {
+    //                 // Ensure user_id is included in the data
+    //                 if (!isset($data['user_id'])) {
+    //                     $data['user_id'] = auth()->id();
+    //                 }
+
+    //                 // Parse the start and end times
+    //                 $startsAt = Carbon::parse($data['starts_at'] . ' ' . $data['ends_at']);
+
+    //                 // Create the absence record
+    //                 Absence::create([
+    //                     'user_id' => $data['user_id'], // Ensure user_id is included
+    //                     'starts_at' => $startsAt,
+    //                     'ends_at' => $startsAt->copy()->addMinutes(55),
+    //                     'comment' => $data['comment'],
+    //                 ]);
+
+    //                 // Refresh the calendar records
+    //                 $this->refreshRecords();
+    //             }),
+    //     ];
+    // }
 
     protected function headerActions(): array
     {
@@ -93,7 +150,6 @@ class CalendarWidget extends FullCalendarWidget
                 }),
         ];
     }
-
 
     public function fetchEvents(array $fetchInfo): array
     {
